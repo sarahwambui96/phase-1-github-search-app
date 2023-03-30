@@ -1,80 +1,65 @@
-function searchUser(){
+document.addEventListener('DOMContentLoaded', () =>{
     const form = document.querySelector('#github-form')
-    //console.log(form)
-    form.addEventListener('submit', (e) => {
-        e.preventDefault()
-        const search = document.querySelector('#search').value
-        //console.log(search)
+    form.addEventListener('submit', searchUser)
+})
 
-        const userName = search.split(' ').join('')
-        //console.log(userName)
-        fetch('https://api.github.com/search/users?q='+userName)
-        .then(resp => resp.json())
-        .then(searchResult => {
-            //console.log(searchResult)
-            let array = searchResult.items
-            //console.log(array)
-            const p = document.createElement('p')
-            p.textContent = 'CLICK on the image to see repositories!'
-            document.body.append(p)
-            const userElement = document.createElement('div')
-            document.body.append(userElement)
-            //console.log(userElement)
-    
-            for (let i = 0; i < array.length; i++){
-                let user = array[i];
-                //console.log(i)
-                
-                
-                const username = document.createElement('h3')
-                username.textContent = user.login
-                userElement.appendChild(username)
-
-                const avatar = document.createElement('img')
-                avatar.src = user.avatar_url
-                userElement.appendChild(avatar)
-
-                const profileLink = document.createElement('a')
-                profileLink.textContent = 'View Profile'
-                profileLink.href = user.html_url
-                userElement.appendChild(profileLink)
-
-                avatar.addEventListener('click', () =>{
-                    fetch(`https://api.github.com/users/${userName}/repos`)
-                    .then(resp => resp.json())
-                    .then(repos =>{
-                        //console.log(repos)
-
-                        
-                        repos.forEach(repo =>{
-                            let repoData = repo
-                            //console.log(repoData)
-
-                            const reposList = document.createElement('ul')
-                            document.body.appendChild(reposList)
-                            //console.log(reposList)
-
-                            const reposName = document.createElement('li')
-                            console.log(reposName)
-                            reposName.textContent = repoData.name
-                            reposList.appendChild(reposName)
-                        })
-
-                    })
-                })
-
-            }
-            
-        })
+//fetch user details using given url
+function searchUser(e){
+    e.preventDefault()
+    const search = document.querySelector('#search').value 
+    const userName = search.split(' ').join('')
+    fetch(`https://api.github.com/search/users?q=${userName}`)
+    .then(resp => resp.json())
+    .then(users => {
+        renderDetails(users.items)
     })
-
-    
-
-   
 }
- 
 
+//render details for each user
+function renderDetails(users){
+    users.forEach(user => {
+        createUserElement(user)
+    })
+}
 
+//create element for details and interpolate them
+function createUserElement(user){
+    const userElement = document.createElement('div')
+    document.body.append(userElement)
+    userElement.innerHTML = `<h3>${user.login}</h3>`
+                          + `<img src="${user.avatar_url}">` 
+                          + `<a href="${user.html_url}" target="_blank">View Profile</a>`
+                          + `<button id="button">Click ${user.login} Repos</button>`
+    userElement.querySelector('#button').addEventListener('click', ()=>{
+        fetchRepos(user)
+    })
+}
+//fetch details using given url
+function fetchRepos(userName){
+    fetch(`https://api.github.com/users/${userName.login}/repos`)
+    .then(resp => resp.json())
+    .then(repos =>{
+        renderRepos(repos)
+    })
+}
 
-document.addEventListener('DOMContentLoaded', searchUser)
+//render repo details
+function renderRepos(repos){
+    repos.forEach(repo =>{
+        createRepoElement(repo)
+    })
+}
 
+//create an element and child elements and 
+function createRepoElement(repo){
+
+    const reposList = document.createElement('ul')
+    document.body.appendChild(reposList)
+                            
+    const reposName = document.createElement('li')
+    console.log(reposName)
+    reposName.textContent = repo.name
+    reposList.appendChild(reposName)
+                        
+
+}
